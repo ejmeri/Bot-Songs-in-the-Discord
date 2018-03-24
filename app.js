@@ -87,14 +87,14 @@ client.on('message', async message => {
         return handleVideo(video, message, voiceChannel);
         // } fim else
 
-    } else if (command === 'trocar') {
+    } else if (command === 'pular') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         if (!serverQueue) return message.channel.send('Não há mais música, trollo em');
 
         serverQueue.connection.dispatcher.end();
 
         return message.channel.send('VC Q MANDA, ENTÃO TOMA A PRÓXIMA!');
-    } else if (command === 'stop') {
+    } else if (command === 'parar') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         if (!serverQueue) return message.channel.send('Tem nada pra parar não loko, trollo em');
 
@@ -122,7 +122,7 @@ client.on('message', async message => {
         if (!serverQueue) return message.channel.send('TEM PORRA NENHUMA AQUI NÃO!');
         return message.channel.send(`__**Músicas da fila:**__ \n\n${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')} \n\n** Tocando agora:** ${serverQueue.songs[0].title}
 		`);
-    } else if (command === 'parar') {
+    } else if (command === 'pausar') {
         if (serverQueue && serverQueue.playing) {
             serverQueue.playing = false;
             serverQueue.connection.dispatcher.pause();
