@@ -4,11 +4,8 @@
   "description": "",
   "main": "app.js",
   "engines": {
-    "node":"latest",
-    "npm":"latest"
-  },
-  "scripts": {
-    "test": "node app"
+    "node": "latest",
+    "npm": "latest"
   },
   "author": "elmerisilva@hotmail.com",
   "license": "ISC",
@@ -17,5 +14,8 @@
     "opusscript": "0.0.6",
     "simple-youtube-api": "^5.0.1",
     "ytdl-core": "^0.20.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.2"
   }
 }
