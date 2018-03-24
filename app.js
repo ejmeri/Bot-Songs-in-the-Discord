@@ -254,6 +254,9 @@ async function play(guild, song) {
 
     if (!song) {
         // serverQueue.voiceChannel.leave(); deixar canal
+        console.log(song);
+        song.url = await songlist();
+        
         queue.delete(guild.id); // limpar fila
         return console.log('No more songs');
     }

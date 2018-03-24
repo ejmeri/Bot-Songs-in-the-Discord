@@ -1,7 +1,7 @@
 require('dotenv').load();
 
 const mysql = require('../database/homologacao');
-const option = require('../database/option').production; // NUNCA ESQUECER DE TROCAR
+const option = require('../database/option').homologacao; // NUNCA ESQUECER DE TROCAR
 
 if (!global.hasOwnProperty('db')) {
 	var Sequelize = require('sequelize'),
