@@ -35,7 +35,7 @@ db.sequelize.sync().then(function() {
 
         lineReader.eachLine('autoplaylist.txt', function (line, last) {
             
-            playlist.create({url:line}).then((err) => {
+            db.Playlist.create({url:line}).then((err) => {
                 if(err) console.log(err);
             });
 
