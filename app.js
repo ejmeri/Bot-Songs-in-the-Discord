@@ -33,9 +33,13 @@ db.sequelize.sync().then(function () {
         console.log('Só vai, to a mil aqui já!');
         client.user.setActivity('Pronto para tocar');
 
-        db.Playlist.findAll().then((song) => {
-            console.log(song);
-        });
+        lines = db.Playlist.findAndCountAll();
+        
+        console.log(lines);
+        
+        // db.Playlist.findAll().then((song) => {
+        //     console.log(song);
+        // });
         //     lineReader.eachLine('autoplaylist.txt', function (line, last) {
 
         //         db.Playlist.create({url:line}).then((err) => {
@@ -216,11 +220,13 @@ async function handleVideo(video, message, voiceChannel, playlist = false) {
     return undefined;
 }
 
-function play(guild, song) {
+
+
+async function play(guild, song) {
     const serverQueue = queue.get(guild.id);
 
     if (!song) {
-        serverQueue.voiceChannel.leave();
+        // serverQueue.voiceChannel.leave(); deixar canal
         queue.delete(guild.id); // limpar fila
         return console.log('No more songs');
     }
@@ -231,7 +237,7 @@ function play(guild, song) {
         .on('end', () => {
             console.log('Song ended.');
             serverQueue.songs.shift();
-            play(guild, serverQueue.songs[0]);
+            await play(guild, serverQueue.songs[0]);
         })
         .on('error', error => console.error(error));
 
