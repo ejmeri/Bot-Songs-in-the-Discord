@@ -14,7 +14,7 @@
     "mysql": "^2.15.0",
     "opusscript": "0.0.6",
     "pg": "^7.4.1",
-    "sequelize": "^4.37.4",
+    "sequelize": "^4.0.0",
     "simple-youtube-api": "^5.0.1",
     "ytdl-core": "^0.20.2"
   },
