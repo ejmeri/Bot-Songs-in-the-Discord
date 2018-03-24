@@ -28,7 +28,7 @@ var playlist = require('./models/playlist');
 client.on('warn', console.warn);
 client.on('error', console.error);
 
-db.sequelize.sync().then(function () {
+db.sequelize.sync().then(async () => {
     client.on('ready', () => {
         console.log('Só vai, to a mil aqui já!');
         client.user.setActivity('Pronto para tocar');
