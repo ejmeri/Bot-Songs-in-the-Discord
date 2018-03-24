@@ -263,6 +263,9 @@ async function play(guild, song) {
     var url = '',
         newurl = '';
 
+
+    console.log(song);
+
     // if (!song) {
     //     // serverQueue.voiceChannel.leave(); deixar canal
     //     newurl = await songlist();
