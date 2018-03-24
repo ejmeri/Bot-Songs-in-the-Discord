@@ -28,14 +28,16 @@ var playlist = require('./models/playlist');
 client.on('warn', console.warn);
 client.on('error', console.error);
 
-db.sequelize.sync().then(async () => {
+db.sequelize.sync().then(function() {
     client.on('ready', () => {
         console.log('Só vai, to a mil aqui já!');
         client.user.setActivity('Pronto para tocar');
 
         lineReader.eachLine('autoplaylist.txt', function (line, last) {
             
-            const activity = await playlist.create({url:line});
+            playlist.create({url:line}).then((err) => {
+                if(err) console.log(err);
+            });
 
             if (last) {
                 return false; // stop reading
