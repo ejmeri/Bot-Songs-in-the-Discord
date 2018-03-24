@@ -8,7 +8,11 @@ const queue = new Map();
 
 let lineReader = require('line-reader');
 
+
+require('dotenv').load();
+
 var db = require('./models');
+
 
 client.on('warn', console.warn);
 client.on('error', console.error);

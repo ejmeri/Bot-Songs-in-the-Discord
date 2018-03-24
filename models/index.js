@@ -1,3 +1,7 @@
+	
+require('dotenv').load();
+
+
 if (!global.hasOwnProperty('db')) {
     var Sequelize = require('sequelize')
       , sequelize = null
