@@ -1,0 +1,5 @@
+{
+    "production": {
+        "use_env_variable": "postgres://askafekzbcnmls:05a7a22a7d29c91a888afa2cc533bc016304d1304c5f3efc45d86c9dfe203e23@ec2-54-243-239-66.compute-1.amazonaws.com:5432/d7fpa5pcu91lqj"
+    }
+}

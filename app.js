@@ -1,21 +1,25 @@
 const { Client,Util } = require('discord.js');
 const { TOKEN,PREFIX,GOOGLE_API_KEY, VOLUME } = require('./config');
-
 const YouTube = require('simple-youtube-api');
 const ytdl = require('ytdl-core');
-
 const client = new Client({ disableEveryone: true });
-
 const youtube = new YouTube(GOOGLE_API_KEY);
-
 const queue = new Map();
+
+let lineReader = require('line-reader');
+
+var db = require('./models');
 
 client.on('warn', console.warn);
 client.on('error', console.error);
-client.on('ready', () => {
-    console.log('Só vai, to a mil aqui já!');
-    client.user.setActivity('Pronto para tocar');
-}); 
+
+db.sequelize.sync().then(function() {
+    client.on('ready', () => {
+        console.log('Só vai, to a mil aqui já!');
+        client.user.setActivity('Pronto para tocar');
+    });
+});
+
 client.on('disconnect', () => console.log('Disconectei pai...'));
 client.on('reconnecting', () => console.log('To reconectando.. perai!'));
 
