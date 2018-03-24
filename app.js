@@ -1,8 +1,18 @@
-const { Client,Util } = require('discord.js');
-const { TOKEN,PREFIX,GOOGLE_API_KEY, VOLUME } = require('./config');
+const {
+    Client,
+    Util
+} = require('discord.js');
+const {
+    TOKEN,
+    PREFIX,
+    GOOGLE_API_KEY,
+    VOLUME
+} = require('./config');
 const YouTube = require('simple-youtube-api');
 const ytdl = require('ytdl-core');
-const client = new Client({ disableEveryone: true });
+const client = new Client({
+    disableEveryone: true
+});
 const youtube = new YouTube(GOOGLE_API_KEY);
 const queue = new Map();
 
@@ -13,14 +23,25 @@ require('dotenv').load();
 
 var db = require('./models');
 
+var playlist = require('./models/playlist');
 
 client.on('warn', console.warn);
 client.on('error', console.error);
 
-db.sequelize.sync().then(function() {
+db.sequelize.sync().then(function () {
     client.on('ready', () => {
         console.log('Só vai, to a mil aqui já!');
         client.user.setActivity('Pronto para tocar');
+
+        lineReader.eachLine('autoplaylist.txt', function (line, last) {
+            
+            const activity = await playlist.create({url:line});
+
+            if (last) {
+                return false; // stop reading
+            }
+        });
+
     });
 });
 
@@ -73,8 +94,8 @@ client.on('message', async message => {
                 var videos = await youtube.searchVideos(searchString, 10);
                 let index = 0;
                 message.channel.send(`__**Escolha uma música ae:**__ \n\n ${videos.map(video2 => `**${++index} -** ${video2.title}`).join('\n')} \n\n Escolha o número da música ae pa nois.`); // eslint-disable-next-line max-depth
-                
-                
+
+
                 try {
                     var response = await message.channel.awaitMessages(message2 => message2.content > 0 && message2.content < 11, {
                         maxMatches: 1,
@@ -113,17 +134,16 @@ client.on('message', async message => {
 
     } else if (command === 'volume') {
 
-        if(!args[1] >= 30) return message.channel.send(`QUER FICAR SURDO?? (Volume máximo 30).\n\n Volume atual: **${serverQueue.volume}**`);
-		if (!message.member.voiceChannel) return message.channel.send('VOCE NÃO TA NO CANAL');
-		if (!serverQueue) return message.channel.send('NÃO TEM NADA TOCANDO BB..');
+        if (!args[1] >= 30) return message.channel.send(`QUER FICAR SURDO?? (Volume máximo 30).\n\n Volume atual: **${serverQueue.volume}**`);
+        if (!message.member.voiceChannel) return message.channel.send('VOCE NÃO TA NO CANAL');
+        if (!serverQueue) return message.channel.send('NÃO TEM NADA TOCANDO BB..');
         if (!args[1]) return message.channel.send(`Volume atual: **${serverQueue.volume}**`);
-        
-		serverQueue.volume = args[1];
-		serverQueue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
-        
+
+        serverQueue.volume = args[1];
+        serverQueue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
+
         return message.channel.send(`Novo volume: **${args[1]}**`);
-	}
-     else if (command === 'tocando') {
+    } else if (command === 'tocando') {
         if (!serverQueue) return message.channel.send('Como vai mostrar, se não tem nada pra tocar em???.');
         return message.channel.send(`🎶 Tocando agora: **${serverQueue.songs[0].title}**`);
     } else if (command === 'fila') {
@@ -213,7 +233,7 @@ function play(guild, song) {
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
 
     setActivity(`Reproduzinho: ${song.title} 🎶🎶`);
-    
+
     serverQueue.textChannel.send(`🎶 Start playing: **${song.title}**`);
 }
 
