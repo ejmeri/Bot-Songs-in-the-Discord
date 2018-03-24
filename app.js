@@ -33,8 +33,8 @@ db.sequelize.sync().then(function () {
         console.log('Só vai, to a mil aqui já!');
         client.user.setActivity('Pronto para tocar');
 
-        db.Playlist.findAndCountAll().then((lines) => {
-            console.log(lines);        
+        db.Playlist.count().then((lines) => {
+            console.log("total -> ", lines);        
         });
         
 
