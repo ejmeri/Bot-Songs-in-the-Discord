@@ -29,28 +29,26 @@ client.on('warn', console.warn);
 client.on('error', console.error);
 
 db.sequelize.sync().then(function () {
-    client.on('ready', () => {
+    client.on('ready', async () => {
         console.log('Só vai, to a mil aqui já!');
         client.user.setActivity('Pronto para tocar');
 
-        db.Playlist.count().then((lines) => {
-            console.log("total -> ", lines);        
-        });
-        
 
+        // console.log(await songlist());
         // db.Playlist.findAll().then((song) => {
         //     console.log(song);
         // });
-        //     lineReader.eachLine('autoplaylist.txt', function (line, last) {
 
-        //         db.Playlist.create({url:line}).then((err) => {
-        //             if(err) console.log(err);
-        //         });
+        // lineReader.eachLine('autoplaylist.txt', function (line, last) {
 
-        //         if (last) {
-        //             return false; // stop reading
-        //         }
+        //     db.Playlist.create({url:line}).then((err) => {
+        //         if(err) console.log(err);
         //     });
+
+        //     if (last) {
+        //         return false; // stop reading
+        //     }
+        // });
 
     });
 });
@@ -89,13 +87,20 @@ client.on('message', async message => {
         }
 
         // if (url.match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
-        //     const playlist = await youtube.getPlaylist(url);
-        //     const videos = await playlist.getVideos();
-        //     for (const video of Object.values(videos)) {
-        //         const video2 = await youtube.getVideoByID(video.id); // eslint-disable-line no-await-in-loop
-        //         await handleVideo(video2, message, voiceChannel, true); // eslint-disable-line no-await-in-loop
+
+        //     if (newsong(url)) {
+        //         return message.channel.send(`✅ Música adicionada a sua playlist`);
+        //     } else {
+        //         return message.channel.send(`Esta url já foi adicionada`)
         //     }
-        //     return message.channel.send(`✅ Playlist: **${playlist.title}** has been added to the queue!`);
+
+        //     // const playlist = await youtube.getPlaylist(url);
+        //     // const videos = await playlist.getVideos();
+        //     // for (const video of Object.values(videos)) {
+        //     //     const video2 = await youtube.getVideoByID(video.id); // eslint-disable-line no-await-in-loop
+        //     //     await handleVideo(video2, message, voiceChannel, true); // eslint-disable-line no-await-in-loop
+        //     // }
+        //     // return message.channel.send(`✅ Playlist: **${playlist.title}** has been added to the queue!`);
         // } else {
         try {
             var video = await youtube.getVideo(url);
@@ -124,7 +129,7 @@ client.on('message', async message => {
             }
         }
         return handleVideo(video, message, voiceChannel);
-        // } fim else
+        // } //fim else
 
     } else if (command === 'pular') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
@@ -174,6 +179,27 @@ client.on('message', async message => {
             return message.channel.send('▶ AE PORRA, VOLTOU A FESTA!');
         }
         return message.channel.send('NÃO TEM NADA TOCANDO BB.');
+    } else if (command == 'nova') {
+        
+        var isLink = isYTLink(url);
+        
+        if (isLink) {
+            if (newsong(url) == true) {
+                return message.channel.send(`✅ Música adicionada a sua playlist`);
+            } else {
+                return message.channel.send(`Esta url já foi adicionada`)
+            }
+            // const playlist = await youtube.getPlaylist(url);
+            // const videos = await playlist.getVideos();
+            // for (const video of Object.values(videos)) {
+            //     const video2 = await youtube.getVideoByID(video.id); // eslint-disable-line no-await-in-loop
+            //     await handleVideo(video2, message, voiceChannel, true); // eslint-disable-line no-await-in-loop
+            // }
+            // return message.channel.send(`✅ Playlist: **${playlist.title}** has been added to the queue!`);
+        }
+        else {
+            return message.channel.send('🆘 Ih rapaz... LINK INVALIDO! 🆘🆘🆘🆘🆘');
+        }
     }
 
     return undefined;
@@ -249,6 +275,45 @@ async function play(guild, song) {
     serverQueue.textChannel.send(`🎶 Start playing: **${song.title}**`);
 }
 
+async function songlist() {
+    var max = await db.Playlist.count();
+    var line = Math.random() * (max - 1) + 1;
+    line = Math.round(line);
+    var song = await db.Playlist.findById(line);
+    console.log(song.url);
+
+    return song.url;
+}
+
+async function newsong(link) {
+    var retorno = false;
+
+    var song = await db.Playlist.findOne({
+        where: {
+            url: link
+        }
+    });
+
+    if (song) {
+        retorno = false;
+    } else {
+        await db.Playlist.create({
+            url: link
+        });
+        retorno = true;
+    }
+
+    return retorno;
+}
+
+function isYTLink(input){
+	/* YT REGEX : https://stackoverflow.com/questions/3717115/regular-expression-for-youtube-links
+	*	by Adrei Zisu
+	*/
+	var YT_REG = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/
+
+	return YT_REG.test(input);
+}
 
 function setActivity(activity) {
     client.user.setActivity(activity);
