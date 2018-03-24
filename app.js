@@ -36,7 +36,7 @@ db.sequelize.sync().then(function () {
         lines = db.Playlist.findAndCountAll();
         
         console.log(lines);
-        
+
         // db.Playlist.findAll().then((song) => {
         //     console.log(song);
         // });
@@ -234,7 +234,7 @@ async function play(guild, song) {
     console.log(serverQueue.songs);
 
     const dispatcher = serverQueue.connection.playStream(ytdl(song.url)) //first is prefix -< args[0]
-        .on('end', () => {
+        .on('end', async () => {
             console.log('Song ended.');
             serverQueue.songs.shift();
             await play(guild, serverQueue.songs[0]);
