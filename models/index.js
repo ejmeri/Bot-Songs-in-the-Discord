@@ -8,6 +8,9 @@ if (!global.hasOwnProperty('db')) {
   
     if (process.env.HEROKU_POSTGRESQL_BRONZE_URL) {
       // the application is executed on Heroku ... use the postgres database
+
+      console.log('Heroku database');
+      
       sequelize = new Sequelize(process.env.HEROKU_POSTGRESQL_BRONZE_URL, {
         dialect:  'postgres',
         protocol: 'postgres',
