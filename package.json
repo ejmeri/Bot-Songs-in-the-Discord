@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "engines": {
+    "node" : "8.10.0",
     "npm": "latest"
   },
   "author": "elmerisilva@hotmail.com",
