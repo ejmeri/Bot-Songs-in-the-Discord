@@ -6,4 +6,4 @@ exports.GOOGLE_API_KEY = 'AIzaSyDm_rxLN_NbC5plYb12VjHkT2btu23aA4w';
 
 exports.LIST_MUSIC = '5';
 
-exports.VOLUME = '3';
+exports.VOLUME = '2';
