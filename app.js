@@ -1,19 +1,10 @@
-const {
-    Client,
-    Util
-} = require('discord.js');
-const {
-    TOKEN,
-    PREFIX,
-    GOOGLE_API_KEY
-} = require('./config');
+const { Client,Util } = require('discord.js');
+const { TOKEN,PREFIX,GOOGLE_API_KEY, VOLUME } = require('./config');
 
 const YouTube = require('simple-youtube-api');
 const ytdl = require('ytdl-core');
 
-const client = new Client({
-    disableEveryone: true
-});
+const client = new Client({ disableEveryone: true });
 
 const youtube = new YouTube(GOOGLE_API_KEY);
 
@@ -21,7 +12,10 @@ const queue = new Map();
 
 client.on('warn', console.warn);
 client.on('error', console.error);
-client.on('ready', () => console.log('Só vai, to a mil aqui já!'));
+client.on('ready', () => {
+    console.log('Só vai, to a mil aqui já!');
+    client.user.setActivity('Pronto para tocar');
+}); 
 client.on('disconnect', () => console.log('Disconectei pai...'));
 client.on('reconnecting', () => console.log('To reconectando.. perai!'));
 
@@ -119,7 +113,7 @@ client.on('message', async message => {
 		serverQueue.volume = args[1];
 		serverQueue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
         
-        return message.channel.send(`Volume à ser trocado: **${args[1]}**`);
+        return message.channel.send(`Novo volume: **${args[1]}**`);
 	}
      else if (command === 'tocando') {
         if (!serverQueue) return message.channel.send('Como vai mostrar, se não tem nada pra tocar em???.');
@@ -151,19 +145,20 @@ client.on('message', async message => {
 
 async function handleVideo(video, message, voiceChannel, playlist = false) {
     const serverQueue = queue.get(message.guild.id);
-    console.log(video);
+
     const song = {
         id: video.id,
         title: Util.escapeMarkdown(video.title),
         url: `https://www.youtube.com/watch?v=${video.id}`
     };
+
     if (!serverQueue) {
         const queueConstruct = {
             textChannel: message.channel,
             voiceChannel: voiceChannel,
             connection: null,
             songs: [],
-            volume: 5,
+            volume: VOLUME,
             playing: true
         };
         queue.set(message.guild.id, queueConstruct);
@@ -183,14 +178,13 @@ async function handleVideo(video, message, voiceChannel, playlist = false) {
         serverQueue.songs.push(song);
         console.log(serverQueue.songs);
         if (playlist) return undefined;
-        else return message.channel.send(`✅ **${song.title}** ESSE MUSICÃO DA PREULA FOI ADICIONADO NA FILA NENÉM!`);
+        else return message.channel.send(`✅ **${song.title}** ✅\n\nESSE MUSICÃO DA PREULA FOI ADICIONADO NA FILA NENÉM!`);
     }
     return undefined;
 }
 
 function play(guild, song) {
     const serverQueue = queue.get(guild.id);
-
 
     if (!song) {
         serverQueue.voiceChannel.leave();
@@ -209,6 +203,15 @@ function play(guild, song) {
         .on('error', error => console.error(error));
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+
+    setActivity(`Reproduzinho: ${song.title} 🎶🎶`);
+    
+    serverQueue.textChannel.send(`🎶 Start playing: **${song.title}**`);
+}
+
+
+function setActivity(activity) {
+    client.user.setActivity(activity);
 }
 
 client.login(TOKEN);
