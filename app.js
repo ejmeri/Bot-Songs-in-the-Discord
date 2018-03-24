@@ -263,22 +263,20 @@ async function play(guild, song) {
     var url = '',
         newurl = '';
 
-    if (!song) {
-        // serverQueue.voiceChannel.leave(); deixar canal
-        newurl = await songlist();
-        queue.delete(guild.id); // limpar fila
-    }
+    // if (!song) {
+    //     // serverQueue.voiceChannel.leave(); deixar canal
+    //     newurl = await songlist();
+    //     queue.delete(guild.id); // limpar fila
+    // }
 
-    try {
-        url = song.url;
-    } catch (error) {
-        url = newurl;
-    }
-
-    console.log(url);
+    // try {
+    //     url = song.url;
+    // } catch (error) {
+    //     url = newurl;
+    // }
 
 
-    const dispatcher = serverQueue.connection.playStream(ytdl(url)) //first is prefix -< args[0]
+    const dispatcher = serverQueue.connection.playStream(ytdl(song.url)) //first is prefix -< args[0]
         .on('end', reason => {
             if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
             else console.log(reason);
