@@ -93,7 +93,7 @@ client.on('message', async message => {
         return handleVideo(video, message, voiceChannel);
         // } fim else
 
-    } else if (command === 'sair') {
+    } else if (command === 'trocar') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         if (!serverQueue) return message.channel.send('Não há mais música, trollo em');
 
