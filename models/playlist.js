@@ -1,7 +1,7 @@
 module.exports = function (sequelize, DataTypes) {
     return sequelize.define("Playlist", {
         id: {
-            type: DataType.INTEGER,
+            type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
