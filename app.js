@@ -62,7 +62,7 @@ client.on('reconnecting', () => console.log('To reconectando.. perai!'));
 
 client.on('message', async message => {
     if (message.author.bot) return console.log('Bot ->', message.author.bot);
-    if (!message.content.startsWith(PREFIX_HOMO)) return console.log('Porra ELMERI! Commando errado ->', undefined);
+    if (!message.content.startsWith(PREFIX)) return console.log('Porra ELMERI! Commando errado ->', undefined);
 
     const args = message.content.split(' ');
     const searchString = args.slice(1).join(' ');
@@ -72,7 +72,7 @@ client.on('message', async message => {
 
 
     let command = message.content.toLowerCase().split(' ')[0];
-    command = command.slice(PREFIX_HOMO.length);
+    command = command.slice(PREFIX.length);
 
     if (command === 'tocar') {
 
@@ -378,4 +378,4 @@ function setActivity(activity) {
     client.user.setActivity(activity);
 }
 
-client.login(TOKEN_HOMO);
+client.login(TOKEN);
