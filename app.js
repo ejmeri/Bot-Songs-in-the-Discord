@@ -296,7 +296,9 @@ async function play(guild, song, message = null, voiceChannel = null) {
     //     return;
     // }
 
-    const dispatcher = serverQueue.connection.playStream(ytdl(song.url)) //first is prefix -< args[0]
+
+    var streamoptions = {quality: 'lowest', filter: 'audio'};
+    const dispatcher = serverQueue.connection.playStream(ytdl(song.url, streamoptions)) //first is prefix -< args[0]
         .on('end', reason => {
             if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
             else console.log(reason, ' reason');
