@@ -5,8 +5,10 @@ const {
 const {
     TOKEN,
     PREFIX,
+    PREFIX_HOMO,
     GOOGLE_API_KEY,
-    VOLUME
+    VOLUME, 
+    TOKEN_HOMO
 } = require('./config');
 const YouTube = require('simple-youtube-api');
 const ytdl = require('ytdl-core');
@@ -60,7 +62,7 @@ client.on('reconnecting', () => console.log('To reconectando.. perai!'));
 
 client.on('message', async message => {
     if (message.author.bot) return console.log('Bot ->', message.author.bot);
-    if (!message.content.startsWith(PREFIX)) return console.log('Porra ELMERI! Commando errado ->', undefined);
+    if (!message.content.startsWith(PREFIX_HOMO)) return console.log('Porra ELMERI! Commando errado ->', undefined);
 
     const args = message.content.split(' ');
     const searchString = args.slice(1).join(' ');
@@ -70,7 +72,7 @@ client.on('message', async message => {
 
 
     let command = message.content.toLowerCase().split(' ')[0];
-    command = command.slice(PREFIX.length);
+    command = command.slice(PREFIX_HOMO.length);
 
     if (command === 'tocar') {
 
@@ -87,13 +89,12 @@ client.on('message', async message => {
         }
 
         try {
-            var video = await youtube.getVideo(url);
+            var video = await youtube.getVideo(url);  
         } catch (error) {
             try {
-                var videos = await youtube.searchVideos(searchString, 10);
+                var videos = await youtube.searchVideos(searchString, 5);
                 let index = 0;
                 message.channel.send(`__**Escolha uma música ae:**__ \n\n ${videos.map(video2 => `**${++index} -** ${video2.title}`).join('\n')} \n\n Escolha o número da música ae pa nois.`); // eslint-disable-next-line max-depth
-
 
                 try {
                     var response = await message.channel.awaitMessages(message2 => message2.content > 0 && message2.content < 11, {
@@ -113,28 +114,28 @@ client.on('message', async message => {
         }
 
         return handleVideo(video, message, voiceChannel, false);
-        // } //fim else
 
     } else if (command === 'pular') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
-
-        if (!serverQueue) {
-            var video = await youtube.getVideo(await songlist());
-
-            return handleVideo(video, message, voiceChannel, true);
-        } else
-            serverQueue.connection.dispatcher.end('Skip command has been used!');
-
-
-        return message.channel.send('VC Q MANDA, ENTÃO TOMA A PRÓXIMA!');
+        if (!message.member.voiceChannel) return msg.channel.send('You are not in a voice channel!');
+        if (!serverQueue) return message.channel.send('Nem iniciei, vou pular o que?.');
+        
+        serverQueue.connection.dispatcher.end('Skip command has been used!');
+        
+        return undefined;
 
     } else if (command === 'parar') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
-        // if (!serverQueue) return message.channel.send('Tem nada pra parar não loko, trollo em');
-        // serverQueue.songs = [];
-        // serverQueue.connection.dispatcher.end();
-        voiceChannel.leave();
+        
+        if (!serverQueue) 
+        {
+            voiceChannel.leave();
+        }
+        else {
+            serverQueue.voiceChannel.leave();
+        }
 
+        return undefined;
 
     } else if (command === 'volume') {
 
@@ -155,8 +156,10 @@ client.on('message', async message => {
         return message.channel.send(`🎶 Tocando agora: **${serverQueue.songs[0].title}**`);
     } else if (command === 'fila') {
         if (!serverQueue) return message.channel.send('TEM PORRA NENHUMA AQUI NÃO!');
-        return message.channel.send(`__**Músicas da fila:**__ \n\n${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')} \n\n** Tocando agora:** ${serverQueue.songs[0].title}
-		`);
+        return message.channel.send(`__**Músicas da fila:**__ \n\n${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')} \n\n **Tocando agora: ** ${serverQueue.songs[0].title}`);
+
+        // ${serverQueue.songs[0].title} tocando agora
+
     } else if (command === 'pausar') {
         // if (serverQueue && serverQueue.playing) {
         //     serverQueue.playing = false;
@@ -199,18 +202,21 @@ client.on('message', async message => {
         } else {
             return message.channel.send('🆘 Ih rapaz... LINK INVALIDO! 🆘🆘🆘🆘🆘');
         }
-    } else if (command === 'summon') {
+    } else if (command === 'summon') {  
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
+        
+        if (!serverQueue) 
+        {
+            try {
+                var video = await youtube.getVideo(await songlist());
+                handleVideo(video, message, voiceChannel);
+            } catch (error) {
+                console.log(error);
+            }
+            
+        }
 
-        if (!serverQueue) {
-            var video = await youtube.getVideo(await songlist());
-
-            return handleVideo(video, message, voiceChannel, true);
-        } else
-            serverQueue.connection.dispatcher.end('Skip command has been used!');
-
-
-        return message.channel.send('EAE SEUS PUTOS!');
+		return undefined;
     }
 
     return undefined;
@@ -218,6 +224,8 @@ client.on('message', async message => {
 
 
 async function handleVideo(video, message, voiceChannel, playlist = false) {
+    console.log('chega aqui');
+    
     const serverQueue = queue.get(message.guild.id);
 
     const song = {
@@ -227,6 +235,7 @@ async function handleVideo(video, message, voiceChannel, playlist = false) {
     };
 
     if (!serverQueue) {
+
         const queueConstruct = {
             textChannel: message.channel,
             voiceChannel: voiceChannel,
@@ -242,7 +251,7 @@ async function handleVideo(video, message, voiceChannel, playlist = false) {
         try {
             var connection = await voiceChannel.join();
             queueConstruct.connection = connection;
-            play(message.guild, queueConstruct.songs[0]);
+            play(message.guild, queueConstruct.songs[0], message, voiceChannel);
         } catch (error) {
             console.error(`NÃO PUDE ENTRAR NO CANAL: ${error}`);
             queue.delete(message.guild.id);
@@ -250,52 +259,93 @@ async function handleVideo(video, message, voiceChannel, playlist = false) {
         }
     } else {
         serverQueue.songs.push(song);
-
-        if (playlist) return serverQueue.connection.dispatcher.end();
-        else return message.channel.send(`✅ **${song.title}** ✅\n\nESSE MUSICÃO DA PREULA FOI ADICIONADO NA FILA NENÉM!`);
+        
+        if (playlist) return  serverQueue.connection.dispatcher.end('Skip command has been used!');
+        else return message.channel.send(`✅ **${song.title}** \n\nESSE MUSICÃO DA PREULA FOI ADICIONADO NA FILA!`);
     }
     return undefined;
 }
 
+async function getVideo() {
 
-async function play(guild, song) {
+    var condition = true;
+    var video;
+
+    while (condition) {
+        var url = await songlist();
+        video = await youtube.getVideo(url);  
+        
+        if(video) condition = false;
+    }
+
+    return video;
+}
+
+async function naqueue(song, message, voiceChannel) {
+    
+    // console.log(song);
+    var video;
+    var condition = true;
+
+    if(!song) {
+
+        console.log(`-----------------------------------`)
+        while (condition) {
+            var url = await songlist();
+            try {
+                video = await youtube.getVideo(url);
+                console.log(video);
+                condition = false;
+            } catch (error) {
+                console.log(error);
+                url = await songlist();
+                video = await youtube.getVideo(url);
+            }
+        }
+
+        const song = {
+            id: video.id,
+            title: Util.escapeMarkdown(video.title),
+            url: `https://www.youtube.com/watch?v=${video.id}`
+        }
+
+        handleVideo(video, message, voiceChannel, true);
+
+    }
+}
+
+async function play(guild, song, message = null, voiceChannel = null) {
     const serverQueue = queue.get(guild.id);
-    var url = '',
-        newurl = '';
-
-
-    console.log(song);
+    var url = '', newurl = '';
 
     // if (!song) {
-    //     // serverQueue.voiceChannel.leave(); deixar canal
-    //     newurl = await songlist();
+    //     serverQueue.voiceChannel.leave(); //deixar canal
+    //     // newurl = await songlist();
     //     queue.delete(guild.id); // limpar fila
+    //     return;
     // }
-
-    // try {
-    //     url = song.url;
-    // } catch (error) {
-    //     url = newurl;
-    // }
-
 
     const dispatcher = serverQueue.connection.playStream(ytdl(song.url)) //first is prefix -< args[0]
         .on('end', reason => {
             if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
-            else console.log(reason);
+            else console.log(reason, ' reason');
             serverQueue.songs.shift();
-            play(guild, serverQueue.songs[0]);
+
+            if(!serverQueue.songs[0]){
+                queue.delete(guild.id);
+                naqueue(serverQueue.songs[0], message, voiceChannel);
+            }
+            else
+                play(guild, serverQueue.songs[0], message, voiceChannel);
         })
         .on('error', error => console.error(error));
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-
-    // setActivity(`Reproduzinho: ${song.title} 🎶🎶`);
-
     serverQueue.textChannel.send(`🎶 Start playing: **${song.title}**`);
 }
 
 async function songlist() {
+
     var max = await db.Playlist.count();
     var line = Math.random() * (max - 1) + 1;
     line = Math.round(line);
@@ -307,29 +357,20 @@ async function songlist() {
 async function newsong(link) {
     var retorno = false;
 
-    var song = await db.Playlist.findOne({
-        where: {
-            url: link
-        }
-    });
+    var song = await db.Playlist.findOne({ where: {url: link}});
 
-    if (song) {
+    if (song) 
         retorno = false;
-    } else {
-        await db.Playlist.create({
-            url: link
-        });
+    else {
+        await db.Playlist.create({ url: link});
         retorno = true;
     }
     return retorno;
 }
 
+/* YT REGEX : https://stackoverflow.com/questions/3717115/regular-expression-for-youtube-links  ** by Adrei Zisu **/
 function isYTLink(input) {
-    /* YT REGEX : https://stackoverflow.com/questions/3717115/regular-expression-for-youtube-links
-     *	by Adrei Zisu
-     */
     var YT_REG = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/
-
     return YT_REG.test(input);
 }
 
@@ -337,4 +378,4 @@ function setActivity(activity) {
     client.user.setActivity(activity);
 }
 
-client.login(TOKEN);
+client.login(TOKEN_HOMO);
