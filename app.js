@@ -312,7 +312,9 @@ async function play(guild, song, message = null, voiceChannel = null) {
         .on('error', error => console.error(error));
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    client.user.setActivity(`song -> ${song.title}`);    
+
+    var options = {url: song.url, type: 2};
+    client.user.setActivity(`song -> ${song.title}`, options);    
     serverQueue.textChannel.send(`🎶 Start playing: **${song.title}**`);
 }
 
