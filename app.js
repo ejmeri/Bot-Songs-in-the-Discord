@@ -1,64 +1,27 @@
-const {
-    Client,
-    Util
-} = require('discord.js');
-const {
-    TOKEN,
-    PREFIX,
-    PREFIX_HOMO,
-    GOOGLE_API_KEY,
-    VOLUME, 
-    TOKEN_HOMO
-} = require('./config');
+const {Client,Util} = require('discord.js');
+const { TOKEN, TOKEN_HOMO, PREFIX,PREFIX_OPEN_EXIT,GOOGLE_API_KEY } = require('./config/config-bot');
+var {VOLUME} = require('./config/config-bot');
 const YouTube = require('simple-youtube-api');
 const ytdl = require('ytdl-core');
-const client = new Client({
-    disableEveryone: true
-});
+const client = new Client({disableEveryone: true});
 const youtube = new YouTube(GOOGLE_API_KEY);
 const queue = new Map();
 
-let lineReader = require('line-reader');
-
-
+// let lineReader = require('line-reader');
 require('dotenv').load();
-
-var db = require('./models');
-
-var playlist = require('./models/playlist');
+var db = require('./models');  // database and tables
 
 client.on('warn', console.warn);
 client.on('error', console.error);
 
 db.sequelize.sync().then(function () {
     client.on('ready', async () => {
-        console.log('Só vai, to a mil aqui já!');
-        client.user.setActivity('Pronto para tocar');
-
-
-        // console.log(await songlist());
-        // db.Playlist.findAll().then((song) => {
-        //     console.log(song);
-        // });
-
-        // lineReader.eachLine('autoplaylist.txt', function (line, last) {
-
-        //     db.Playlist.create({url:line}).then((err) => {
-        //         if(err) console.log(err);
-        //     });
-
-        //     if (last) {
-        //         return false; // stop reading
-        //     }
-        // });
-
+        console.log('Bot Keirrison -> Launched...');
     });
 });
 
 client.on('disconnect', () => console.log('Disconectei pai...'));
 client.on('reconnecting', () => console.log('To reconectando.. perai!'));
-
-
 
 client.on('message', async message => {
     if (message.author.bot) return console.log('Bot ->', message.author.bot);
@@ -72,9 +35,33 @@ client.on('message', async message => {
 
 
     let command = message.content.toLowerCase().split(' ')[0];
-    command = command.slice(PREFIX.length);
+    let enter_exit = command.slice(PREFIX_OPEN_EXIT.length);
+    
+    if(enter_exit == 'entrar') {
+        let role = message.guild.roles.find("name", "Entrou");
 
-    if (command === 'tocar') {
+        if(message.member.roles.has(role.id)) {
+            return message.channel.send('VOCE JÁ ENTROU PAI... burro');
+        } else {
+            message.member.addRole(role.id)
+            return message.channel.send('BEM VINDO AO BONDE CUZAO!');
+        }
+    }
+    else if(enter_exit == 'sair') {
+        let role = message.guild.roles.find("name", "Entrou");
+
+        if(message.member.roles.has(role.id)) {
+            message.member.removeRole(role.id);
+            return message.channel.send('ADEUS LIXO!');
+        }
+        else {
+            return message.channel.send('MAS TU NEM ENTROU.. ué');
+        }
+    }
+    
+    command = command.slice(PREFIX.length); // others command
+  
+    if (command == 'tocar') {
 
         if (!voiceChannel) return message.channel.send('Não encontrei o canal de voz');
 
@@ -115,16 +102,19 @@ client.on('message', async message => {
 
         return handleVideo(video, message, voiceChannel, false);
 
-    } else if (command === 'pular') {
+    } else if (command == 'pular') {
+        console.log(message);
+
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         if (!message.member.voiceChannel) return msg.channel.send('You are not in a voice channel!');
         if (!serverQueue) return message.channel.send('Nem iniciei, vou pular o que?.');
+        
         
         serverQueue.connection.dispatcher.end('Skip command has been used!');
         
         return undefined;
 
-    } else if (command === 'parar') {
+    } else if (command == 'parar') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         
         if (!serverQueue) 
@@ -137,30 +127,31 @@ client.on('message', async message => {
 
         return undefined;
 
-    } else if (command === 'volume') {
+    } else if (command == 'volume') {
 
-        if (!args[1] >= 30) return message.channel.send(`QUER FICAR SURDO?? (Volume máximo 30).\n\n Volume atual: **${serverQueue.volume}**`);
+        if (!args[1] >= 100) return message.channel.send(`QUER FICAR SURDO?? (Volume máximo 100).\n\n Volume atual: **${serverQueue.volume}**`);
         if (!message.member.voiceChannel) return message.channel.send('VOCE NÃO TA NO CANAL');
-        // if (!serverQueue) return message.channel.send('NÃO TEM NADA TOCANDO BB..');
-        if (!args[1]) return message.channel.send(`Volume atual: **${serverQueue.volume}**`);
+        if (!args[1]) return message.channel.send(`Volume atual: **${(serverQueue.volume)}**`);
 
         if (serverQueue) {
             serverQueue.volume = args[1];
-            serverQueue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
+            serverQueue.connection.dispatcher.setVolumeLogarithmic((args[1]/10) / 5);
         } else
-            serverQueue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
+            serverQueue.connection.dispatcher.setVolumeLogarithmic((args[1]/10) / 5);
 
+            VOLUME = args[1] / 10;
             return message.channel.send(`Novo volume: **${args[1]}**`);
-    } else if (command === 'tocando') {
+
+    } else if (command == 'tocando') {
         if (!serverQueue) return message.channel.send('Como vai mostrar, se não tem nada pra tocar em???.');
         return message.channel.send(`🎶 Tocando agora: **${serverQueue.songs[0].title}**`);
-    } else if (command === 'fila') {
+    } else if (command == 'fila') {
         if (!serverQueue) return message.channel.send('TEM PORRA NENHUMA AQUI NÃO!');
         return message.channel.send(`__**Músicas da fila:**__ \n\n${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')} \n\n **Tocando agora: ** ${serverQueue.songs[0].title}`);
 
         // ${serverQueue.songs[0].title} tocando agora
 
-    } else if (command === 'pausar') {
+    } else if (command == 'pausar') {
         // if (serverQueue && serverQueue.playing) {
         //     serverQueue.playing = false;
         //     serverQueue.connection.dispatcher.pause();
@@ -172,7 +163,7 @@ client.on('message', async message => {
         serverQueue.connection.dispatcher.pause();
         return message.channel.send('⏸ TA PAUSADO!');
 
-    } else if (command === 'voltar') {
+    } else if (command == 'voltar') {
         // if (serverQueue && !serverQueue.playing) {
         //     serverQueue.playing = true;
         //     serverQueue.connection.dispatcher.resume();
@@ -182,7 +173,7 @@ client.on('message', async message => {
 
         serverQueue.connection.dispatcher.resume();
         return message.channel.send('▶ AE PORRA, VOLTOU A FESTA!');
-    } else if (command === 'nova') {
+    } else if (command == 'nova') {
 
         var isLink = isYTLink(url);
 
@@ -192,17 +183,10 @@ client.on('message', async message => {
             } else {
                 return message.channel.send(`Esta url já foi adicionada`)
             }
-            // const playlist = await youtube.getPlaylist(url);
-            // const videos = await playlist.getVideos();
-            // for (const video of Object.values(videos)) {
-            //     const video2 = await youtube.getVideoByID(video.id); // eslint-disable-line no-await-in-loop
-            //     await handleVideo(video2, message, voiceChannel, true); // eslint-disable-line no-await-in-loop
-            // }
-            // return message.channel.send(`✅ Playlist: **${playlist.title}** has been added to the queue!`);
         } else {
             return message.channel.send('🆘 Ih rapaz... LINK INVALIDO! 🆘🆘🆘🆘🆘');
         }
-    } else if (command === 'summon') {  
+    } else if (command == 'summon') {  
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         
         if (!serverQueue) 
@@ -222,10 +206,7 @@ client.on('message', async message => {
     return undefined;
 });
 
-
 async function handleVideo(video, message, voiceChannel, playlist = false) {
-    console.log('chega aqui');
-    
     const serverQueue = queue.get(message.guild.id);
 
     const song = {
@@ -241,7 +222,7 @@ async function handleVideo(video, message, voiceChannel, playlist = false) {
             voiceChannel: voiceChannel,
             connection: null,
             songs: [],
-            volume: VOLUME,
+            volume: (VOLUME / 10),
             playing: true
         };
         queue.set(message.guild.id, queueConstruct);
@@ -288,27 +269,17 @@ async function naqueue(song, message, voiceChannel) {
     var condition = true;
 
     if(!song) {
-
-        console.log(`-----------------------------------`)
         while (condition) {
             var url = await songlist();
             try {
                 video = await youtube.getVideo(url);
-                console.log(video);
                 condition = false;
             } catch (error) {
-                console.log(error);
-                url = await songlist();
-                video = await youtube.getVideo(url);
+                condition = true;
             }
         }
 
-        const song = {
-            id: video.id,
-            title: Util.escapeMarkdown(video.title),
-            url: `https://www.youtube.com/watch?v=${video.id}`
-        }
-
+        const song = {id: video.id,title: Util.escapeMarkdown(video.title), url: `https://www.youtube.com/watch?v=${video.id}`}
         handleVideo(video, message, voiceChannel, true);
 
     }
@@ -341,6 +312,7 @@ async function play(guild, song, message = null, voiceChannel = null) {
         .on('error', error => console.error(error));
 
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+    client.user.setActivity(`song -> ${song.title}`);    
     serverQueue.textChannel.send(`🎶 Start playing: **${song.title}**`);
 }
 
@@ -378,4 +350,4 @@ function setActivity(activity) {
     client.user.setActivity(activity);
 }
 
-client.login(TOKEN);
+client.login(TOKEN_HOMO);

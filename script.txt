@@ -1,0 +1,24 @@
+// console.log(await songlist());
+// db.Playlist.findAll().then((song) => {
+//     console.log(song);
+// });
+
+// lineReader.eachLine('autoplaylist.txt', function (line, last) {
+
+//     db.Playlist.create({url:line}).then((err) => {
+//         if(err) console.log(err);
+//     });
+
+//     if (last) {
+//         return false; // stop reading
+//     }
+// });
+
+
+// const playlist = await youtube.getPlaylist(url);
+// const videos = await playlist.getVideos();
+// for (const video of Object.values(videos)) {
+//     const video2 = await youtube.getVideoByID(video.id); // eslint-disable-line no-await-in-loop
+//     await handleVideo(video2, message, voiceChannel, true); // eslint-disable-line no-await-in-loop
+// }
+// return message.channel.send(`✅ Playlist: **${playlist.title}** has been added to the queue!`);
