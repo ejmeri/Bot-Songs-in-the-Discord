@@ -405,4 +405,4 @@ function saveCommand(command, message) {
     db.Command.create({name: command,userid:message.member.user.id,username:message.member.user.username});
 }
 
-client.login(IGOR);
+client.login(TOKEN_HOMO);
