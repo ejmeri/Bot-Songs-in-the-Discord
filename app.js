@@ -1,4 +1,4 @@
-const {Client,Util} = require('discord.js');
+﻿const {Client,Util} = require('discord.js');
 const {TOKEN, TOKEN_HOMO, PREFIX,PREFIX_OPEN_EXIT,GOOGLE_API_KEY,IGOR, LIST_MUSIC} = require('./config/config-bot');
 var {VOLUME} = require('./config/config-bot');
 const YouTube = require('simple-youtube-api');
@@ -7,7 +7,7 @@ const client = new Client({disableEveryone: true});
 const youtube = new YouTube(GOOGLE_API_KEY);
 const queue = new Map();
 
-// let lineReader = require('line-reader');
+//let lineReader = require('line-reader');
 require('dotenv').load();
 var db = require('./models');  // database and tables
 
@@ -26,7 +26,10 @@ client.on('reconnecting', () => console.log('To reconectando.. perai!'));
 client.on('message', async message => {
     if (message.author.bot) return console.log('Bot ->', message.author.bot);
     if (!message.content.startsWith(PREFIX)) return console.log('Porra ELMERI! Commando errado ->', undefined);
-
+    
+    
+    //console.log(message.member.user.id, ' ', message.member.user.username);
+    
     const args = message.content.split(' ');
     const searchString = args.slice(1).join(' ');
     const url = args[1] ? args[1].replace(/<(.+)>/g, '$1') : '';
@@ -38,7 +41,9 @@ client.on('message', async message => {
     let enter_exit = command.slice(PREFIX_OPEN_EXIT.length);
     
     if(enter_exit == 'entrar') {
-        let role = await message.guild.roles.get('384350517280636928');
+	db.Command.create({name: enter_exit,userid:message.member.user.id,username:message.member.user.username});
+        
+	let role = await message.guild.roles.get('384350517280636928');
         console.log(role);
         if(message.member.roles.has(role.id)) {
             return message.channel.send('VOCE JÁ ENTROU PAI... burro');
@@ -48,7 +53,9 @@ client.on('message', async message => {
         }
     }
     else if(enter_exit == 'sair') {
-        let role = await message.guild.roles.get('384350517280636928');
+         db.Command.create({name: enter_exit,userid:message.member.user.id,username:message.member.user.username});
+	
+	let role = await message.guild.roles.get('384350517280636928');
 
         if(message.member.roles.has(role.id)) {
             message.member.removeRole(role.id);
@@ -60,8 +67,14 @@ client.on('message', async message => {
     }
     
     command = command.slice(PREFIX.length); // others command
+
+
+    if(command == 'desconectar'){
+	 saveCommand(command, message); 
+	message.guild.voiceConnection.disconnect();
+    }
   
-    if (command == 'tocar') {
+    else if (command == 'tocar') {
 
         if (!voiceChannel) return message.channel.send('Não encontrei o canal de voz');
 
@@ -75,8 +88,10 @@ client.on('message', async message => {
             return message.channel.send('NAO POSSO FALAR AQUI? Reveja suas permissões');
         }
 
+	
+
         try {
-            var video = await youtube.getVideo(url);  
+            var video = await youtube.getVideo(url);
         } catch (error) {
             try {
                 var videos = await youtube.searchVideos(searchString, LIST_MUSIC);
@@ -99,13 +114,15 @@ client.on('message', async message => {
                 return message.channel.send('🆘 Ih rapaz... Não achei nada aqui em. SORRY!');
             }
         }
-
+	
+	saveCommand(command + ' ' + Util.escapeMarkdown(video.title), message);
         return handleVideo(video, message, voiceChannel, false);
 
     } else if (command == 'pular') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         if (!serverQueue) return message.channel.send('Nem iniciei, vou pular o que?.');
         
+        saveCommand(command, message);
         serverQueue.connection.dispatcher.end('Skip command has been used!');
         
         return undefined;
@@ -113,6 +130,8 @@ client.on('message', async message => {
     } else if (command == 'parar') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         
+	saveCommand(command, message);
+
         if (!serverQueue) 
         {
             voiceChannel.leave();
@@ -127,8 +146,14 @@ client.on('message', async message => {
 
         if (!args[1] >= 100) return message.channel.send(`QUER FICAR SURDO?? (Volume máximo 100).\n\n Volume atual: **${serverQueue.volume}**`);
         if (!message.member.voiceChannel) return message.channel.send('VOCE NÃO TA NO CANAL');
-        if (!args[1]) return message.channel.send(`Volume atual: **${(serverQueue.volume)}**`);
-
+        
+	
+	
+	if (!args[1]){
+	    saveCommand(command, message);
+            return message.channel.send(`Volume atual: **${(serverQueue.volume)}**`);
+	}
+	
         if (serverQueue) {
             serverQueue.volume = args[1];
             serverQueue.connection.dispatcher.setVolumeLogarithmic((serverQueue.volume / 10) / 5);
@@ -136,15 +161,21 @@ client.on('message', async message => {
             serverQueue.connection.dispatcher.setVolumeLogarithmic((args[1]/10) / 5);
 
             VOLUME = args[1];
+	    saveCommand(command + ' ' + VOLUME, message);
             return message.channel.send(`Novo volume: **${VOLUME}**`);
 
     } else if (command == 'tocando') {
         if (!serverQueue) return message.channel.send('Como vai mostrar, se não tem nada pra tocar em???.');
+	
+	saveCommand(command, message);
+
         return message.channel.send(`🎶 Tocando agora: **${serverQueue.songs[0].title}**`);
     } else if (command == 'fila') {
         if (!serverQueue) return message.channel.send('TEM PORRA NENHUMA AQUI NÃO!');
-        return message.channel.send(`__**Músicas da fila:**__ \n\n${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')} \n\n **Tocando agora: ** ${serverQueue.songs[0].title}`);
 
+	saveCommand(command, message);
+        return message.channel.send(`__**Músicas da fila:**__ \n\n${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')} \n\n **Tocando agora: ** ${serverQueue.songs[0].title}`);
+	
         // ${serverQueue.songs[0].title} tocando agora
 
     } else if (command == 'pausar') {
@@ -156,6 +187,7 @@ client.on('message', async message => {
 
         // return message.channel.send('NÃO TEM NADA TOCANDO BB.');
 
+	saveCommand(command, message);
         serverQueue.connection.dispatcher.pause();
         return message.channel.send('⏸ TA PAUSADO!');
 
@@ -166,7 +198,7 @@ client.on('message', async message => {
         //     return message.channel.send('▶ AE PORRA, VOLTOU A FESTA!');
         // }
         // return message.channel.send('NÃO TEM NADA TOCANDO BB.');
-
+	saveCommand(command, message);
         serverQueue.connection.dispatcher.resume();
         return message.channel.send('▶ AE PORRA, VOLTOU A FESTA!');
     } else if (command == 'nova') {
@@ -175,6 +207,7 @@ client.on('message', async message => {
 
         if (isLink) {
             if (await newsong(url) == true) {
+		saveCommand(command + ' ' + url, message);
                 return message.channel.send(`✅ Música adicionada a sua playlist`);
             } else {
                 return message.channel.send(`Esta url já foi adicionada`)
@@ -185,6 +218,7 @@ client.on('message', async message => {
     } else if (command == 'summon') {  
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         
+	saveCommand(command, message);
         if (!serverQueue) 
         {
             try {
@@ -198,6 +232,7 @@ client.on('message', async message => {
 
 		return undefined;
     } else if (command == 'ajuda' || command == 'ajudar') {
+	saveCommand(command, message);
         return message.channel.send("``` Temos os seguintes comandos \n\n" + 
                                     "!!entrar - Use este comando para ter acesso a nossos canais\n" +
                                     "!!sair\n" +
@@ -366,4 +401,8 @@ function setActivity(activity) {
     client.user.setActivity(activity);
 }
 
-client.login(TOKEN);
+function saveCommand(command, message) {
+    db.Command.create({name: command,userid:message.member.user.id,username:message.member.user.username});
+}
+
+client.login(IGOR);

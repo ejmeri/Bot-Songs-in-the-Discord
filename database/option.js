@@ -1,4 +1,4 @@
 module.exports = {
-    production : true,
-    homologacao : false
+    heroku : true,
+    mysql : false
 }

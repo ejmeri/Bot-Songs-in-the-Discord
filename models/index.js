@@ -1,7 +1,7 @@
 require('dotenv').load();
 
-const mysql = require('../database/homologacao');
-const option = require('../database/option').production; // NUNCA ESQUECER DE TROCAR
+const mysql = require('../database/mysql');
+const option = require('../database/option').mysql; // NUNCA ESQUECER DE TROCAR
 
 if (!global.hasOwnProperty('db')) {
 	var Sequelize = require('sequelize'),
@@ -22,13 +22,14 @@ if (!global.hasOwnProperty('db')) {
 	} else {
 		// the application is executed on the local machine ... use mysql
 		console.log('mysql database')
-		sequelize = new Sequelize(mysql.database,mysql.username, mysql.password, mysql.params);
+		sequelize = new Sequelize(mysql.database, mysql.username, mysql.password, mysql.params);
 	}
 
 	global.db = {
 		Sequelize: Sequelize,
 		sequelize: sequelize,
-		Playlist: sequelize.import(__dirname + '/playlist')
+		Playlist: sequelize.import(__dirname + '/playlist'),
+		Command: sequelize.import(__dirname + '/command')
 		// add your other models here
 	}
 
