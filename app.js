@@ -366,4 +366,4 @@ function setActivity(activity) {
     client.user.setActivity(activity);
 }
 
-client.login(IGOR);
+client.login(TOKEN_HOMO);
