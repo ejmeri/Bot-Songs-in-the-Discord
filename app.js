@@ -1,5 +1,5 @@
 const {Client,Util} = require('discord.js');
-const { TOKEN, TOKEN_HOMO, PREFIX,PREFIX_OPEN_EXIT,GOOGLE_API_KEY } = require('./config/config-bot');
+const {TOKEN, TOKEN_HOMO, PREFIX,PREFIX_OPEN_EXIT,GOOGLE_API_KEY,IGOR, LIST_MUSIC} = require('./config/config-bot');
 var {VOLUME} = require('./config/config-bot');
 const YouTube = require('simple-youtube-api');
 const ytdl = require('ytdl-core');
@@ -38,7 +38,7 @@ client.on('message', async message => {
     let enter_exit = command.slice(PREFIX_OPEN_EXIT.length);
     
     if(enter_exit == 'entrar') {
-        let role = message.guild.roles.find("name", "Entrou");
+        let role = message.guild.roles.find("name", ":key: Entrou :key:");
 
         if(message.member.roles.has(role.id)) {
             return message.channel.send('VOCE JÁ ENTROU PAI... burro');
@@ -79,7 +79,7 @@ client.on('message', async message => {
             var video = await youtube.getVideo(url);  
         } catch (error) {
             try {
-                var videos = await youtube.searchVideos(searchString, 5);
+                var videos = await youtube.searchVideos(searchString, LIST_MUSIC);
                 let index = 0;
                 message.channel.send(`__**Escolha uma música ae:**__ \n\n ${videos.map(video2 => `**${++index} -** ${video2.title}`).join('\n')} \n\n Escolha o número da música ae pa nois.`); // eslint-disable-next-line max-depth
 
@@ -366,4 +366,4 @@ function setActivity(activity) {
     client.user.setActivity(activity);
 }
 
-client.login(TOKEN_HOMO);
+client.login(IGOR);
