@@ -103,12 +103,8 @@ client.on('message', async message => {
         return handleVideo(video, message, voiceChannel, false);
 
     } else if (command == 'pular') {
-        console.log(message);
-
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
-        if (!message.member.voiceChannel) return msg.channel.send('You are not in a voice channel!');
         if (!serverQueue) return message.channel.send('Nem iniciei, vou pular o que?.');
-        
         
         serverQueue.connection.dispatcher.end('Skip command has been used!');
         
@@ -135,12 +131,12 @@ client.on('message', async message => {
 
         if (serverQueue) {
             serverQueue.volume = args[1];
-            serverQueue.connection.dispatcher.setVolumeLogarithmic((args[1]/10) / 5);
+            serverQueue.connection.dispatcher.setVolumeLogarithmic((serverQueue.volume / 10) / 5);
         } else
             serverQueue.connection.dispatcher.setVolumeLogarithmic((args[1]/10) / 5);
 
-            VOLUME = args[1] / 10;
-            return message.channel.send(`Novo volume: **${args[1]}**`);
+            VOLUME = args[1];
+            return message.channel.send(`Novo volume: **${VOLUME}**`);
 
     } else if (command == 'tocando') {
         if (!serverQueue) return message.channel.send('Como vai mostrar, se não tem nada pra tocar em???.');
@@ -201,6 +197,20 @@ client.on('message', async message => {
         }
 
 		return undefined;
+    } else if (command == 'ajuda' || command == 'ajudar') {
+        return message.channel.send("``` Temos os seguintes comandos \n\n" + 
+                                    "!!entrar - Use este comando para ter acesso a nossos canais\n" +
+                                    "!!sair\n" +
+                                    "!tocar + nome da música ou link do youtube\n" +
+                                    "!pular - Use este comando para pular a música\n" + 
+                                    "!volume - Use este comando para ver com o volume atual da música, que vai de 1 a 100\n"
+                                    + "!volume (valor do volume) - Exemplo: !volume 30\n"+
+                                    "!tocando - Use este comando para qual é música que está tocando\n" +
+                                    "!fila - Use este comando para ver as músicas que estão na fila\n" +
+                                    "!pausar - Use este comando para pausar uma música\n" +
+                                    "!voltar - Use este comando para retomar a música pausada\n" +
+                                    "!nova + link youtbe - Use este comando para cadastrar um nova música nova em nossa playlist. Ex: !nova https://www.youtube.com/watch?v=MVN-0xlzXro&t=124s\n"+
+                                    "!summon - Use este comando para o bot começar a tocar no canal. ```");
     }
 
     return undefined;
@@ -298,7 +308,7 @@ async function play(guild, song, message = null, voiceChannel = null) {
 
 
     // var streamoptions = {quality: 'lowest', filter: 'audio'};
-    const stream = ytdl(song.url, { filter: 'audioonly' });
+    const stream = ytdl(song.url, { quality: 'lowest', filter: 'audioonly' });
 
     const dispatcher = serverQueue.connection.playStream(stream) //first is prefix -< args[0]
         .on('end', reason => {
@@ -315,11 +325,11 @@ async function play(guild, song, message = null, voiceChannel = null) {
         })
         .on('error', error => console.error(error));
 
-    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+    dispatcher.setVolumeLogarithmic((serverQueue.volume / 10) / 5);
 
     var options = {url: song.url, type: 2};
     client.user.setActivity(`${song.title}`, options);    
-    serverQueue.textChannel.send(`🎶 Começando a tocar: **${song.title}**`);
+    // serverQueue.textChannel.send(`🎶 Começando a tocar: **${song.title}**`);
 }
 
 async function songlist() {
