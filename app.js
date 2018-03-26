@@ -308,7 +308,7 @@ async function play(guild, song, message = null, voiceChannel = null) {
 
 
     // var streamoptions = {quality: 'lowest', filter: 'audio'};
-    const stream = ytdl(song.url, { quality: 'highest', filter: 'audioonly' });
+    const stream = await ytdl(song.url, { quality: 'lowest', filter: 'audioonly' });
 
     const dispatcher = serverQueue.connection.playStream(stream) //first is prefix -< args[0]
         .on('end', reason => {
