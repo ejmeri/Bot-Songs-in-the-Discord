@@ -38,7 +38,7 @@ client.on('message', async message => {
     let enter_exit = command.slice(PREFIX_OPEN_EXIT.length);
     
     if(enter_exit == 'entrar') {
-        let role = message.guild.roles.find("name", ":key: Entrou :key:");
+        let role = await message.guild.roles.find("name", ":key: Entrou :key:");
 
         if(message.member.roles.has(role.id)) {
             return message.channel.send('VOCE JÁ ENTROU PAI... burro');
