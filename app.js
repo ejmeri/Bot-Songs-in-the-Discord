@@ -48,7 +48,7 @@ client.on('message', async message => {
         }
     }
     else if(enter_exit == 'sair') {
-        let role = message.guild.roles.find("name", "Entrou");
+        let role = await message.guild.roles.get('384350517280636928');
 
         if(message.member.roles.has(role.id)) {
             message.member.removeRole(role.id);
