@@ -1,5 +1,5 @@
 module.exports = {
-    database: "bot",
+    database: "botigorhomologacao",
     username: "root",
     password: "",
     params: {
