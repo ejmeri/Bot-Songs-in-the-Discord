@@ -1,30 +1,16 @@
-﻿const {
-    Client,
-    Util
-} = require('discord.js');
-const {
-    TOKEN,
-    TOKEN_HOMO,
-    PREFIX,
-    PREFIX_OPEN_EXIT,
-    GOOGLE_API_KEY,
-    IGOR,
-    LIST_MUSIC
-} = require('./config/config-bot');
-var {
-    VOLUME
-} = require('./config/config-bot');
+﻿const {Client,Util} = require('discord.js');
+const {TOKEN, TOKEN_HOMO, PREFIX,PREFIX_OPEN_EXIT,GOOGLE_API_KEY,IGOR, LIST_MUSIC} = require('./config/config-bot');
+var {VOLUME} = require('./config/config-bot');
+var TOTAL = 1;
 const YouTube = require('simple-youtube-api');
 const ytdl = require('ytdl-core');
-const client = new Client({
-    disableEveryone: true
-});
+const client = new Client({disableEveryone: true});
 const youtube = new YouTube(GOOGLE_API_KEY);
 const queue = new Map();
 
-//let lineReader = require('line-reader');
+// let lineReader = require('line-reader');
 require('dotenv').load();
-var db = require('./models'); // database and tables
+var db = require('./models');  // database and tables
 
 client.on('warn', console.warn);
 client.on('error', console.error);
@@ -32,6 +18,8 @@ client.on('error', console.error);
 db.sequelize.sync().then(function () {
     client.on('ready', async () => {
         console.log('Bot Keirrison -> Launched...');
+		TOTAL = await db.Playlist.count();
+		console.log(TOTAL);
     });
 });
 
@@ -41,9 +29,10 @@ client.on('reconnecting', () => console.log('To reconectando.. perai!'));
 client.on('message', async message => {
     if (message.author.bot) return console.log('Bot ->', message.author.bot);
     if (!message.content.startsWith(PREFIX)) return console.log('Porra ELMERI! Commando errado ->', undefined);
-
+    
+    
     //console.log(message.member.user.id, ' ', message.member.user.username);
-
+    
     const args = message.content.split(' ');
     const searchString = args.slice(1).join(' ');
     const url = args[1] ? args[1].replace(/<(.+)>/g, '$1') : '';
@@ -53,45 +42,42 @@ client.on('message', async message => {
 
     let command = message.content.toLowerCase().split(' ')[0];
     let enter_exit = command.slice(PREFIX_OPEN_EXIT.length);
-
-    if (enter_exit == 'entrar') {
-        db.Command.create({
-            name: enter_exit,
-            userid: message.member.user.id,
-            username: message.member.user.username
-        });
-
-        let role = await message.guild.roles.get('384350517280636928');
+    
+    if(enter_exit == 'entrar') {
+	db.Command.create({name: enter_exit,userid:message.member.user.id,username:message.member.user.username});
+        
+	let role = await message.guild.roles.get('384350517280636928');
         console.log(role);
-        if (message.member.roles.has(role.id)) {
+        if(message.member.roles.has(role.id)) {
             return message.channel.send('VOCE JÁ ENTROU PAI... burro');
         } else {
             message.member.addRole(role.id)
             return message.channel.send('BEM VINDO AO BONDE CUZAO!');
         }
-    } else if (enter_exit == 'sair') {
-        db.Command.create({
-            name: enter_exit,
-            userid: message.member.user.id,
-            username: message.member.user.username
-        });
+    }
+    else if(enter_exit == 'sair') {
+         db.Command.create({name: enter_exit,userid:message.member.user.id,username:message.member.user.username});
+	
+	let role = await message.guild.roles.get('384350517280636928');
 
-        let role = await message.guild.roles.get('384350517280636928');
-
-        if (message.member.roles.has(role.id)) {
+        if(message.member.roles.has(role.id)) {
             message.member.removeRole(role.id);
             return message.channel.send('ADEUS LIXO!');
-        } else {
+        }
+        else {
             return message.channel.send('MAS TU NEM ENTROU.. ué');
         }
     }
-
+    
     command = command.slice(PREFIX.length); // others command
 
-    if (command == 'desconectar') {
-        saveCommand(command, message);
-        message.guild.voiceConnection.disconnect();
-    } else if (command == 'tocar') {
+
+    if(command == 'desconectar'){
+	 saveCommand(command, message); 
+	message.guild.voiceConnection.disconnect();
+    }
+  
+    else if (command == 'tocar') {
 
         if (!voiceChannel) return message.channel.send('Não encontrei o canal de voz');
 
@@ -105,7 +91,7 @@ client.on('message', async message => {
             return message.channel.send('NAO POSSO FALAR AQUI? Reveja suas permissões');
         }
 
-
+	
 
         try {
             var video = await youtube.getVideo(url);
@@ -131,27 +117,29 @@ client.on('message', async message => {
                 return message.channel.send('🆘 Ih rapaz... Não achei nada aqui em. SORRY!');
             }
         }
-
-        saveCommand(command + ' ' + Util.escapeMarkdown(video.title), message);
+	
+	saveCommand(command + ' ' + Util.escapeMarkdown(video.title), message);
         return handleVideo(video, message, voiceChannel, false);
 
     } else if (command == 'pular') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
         if (!serverQueue) return message.channel.send('Nem iniciei, vou pular o que?.');
-
+        
         saveCommand(command, message);
         serverQueue.connection.dispatcher.end('Skip command has been used!');
-
+        
         return undefined;
 
     } else if (command == 'parar') {
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
+        
+	saveCommand(command, message);
 
-        saveCommand(command, message);
-
-        if (!serverQueue) {
+        if (!serverQueue) 
+        {
             voiceChannel.leave();
-        } else {
+        }
+        else {
             serverQueue.voiceChannel.leave();
         }
 
@@ -161,58 +149,44 @@ client.on('message', async message => {
 
         if (!args[1] >= 100) return message.channel.send(`QUER FICAR SURDO?? (Volume máximo 100).\n\n Volume atual: **${serverQueue.volume}**`);
         if (!message.member.voiceChannel) return message.channel.send('VOCE NÃO TA NO CANAL');
-
-
-
-        if (!args[1]) {
-            saveCommand(command, message);
+        
+	
+	
+	if (!args[1]){
+	    saveCommand(command, message);
             return message.channel.send(`Volume atual: **${(serverQueue.volume)}**`);
-        }
-
+	}
+	
         if (serverQueue) {
             serverQueue.volume = args[1];
             serverQueue.connection.dispatcher.setVolumeLogarithmic((serverQueue.volume / 10) / 5);
         } else
-            serverQueue.connection.dispatcher.setVolumeLogarithmic((args[1] / 10) / 5);
+            serverQueue.connection.dispatcher.setVolumeLogarithmic((args[1]/10) / 5);
 
-        VOLUME = args[1];
-        saveCommand(command + ' ' + VOLUME, message);
-        return message.channel.send(`Novo volume: **${VOLUME}**`);
+            VOLUME = args[1];
+	    saveCommand(command + ' ' + VOLUME, message);
+            return message.channel.send(`Novo volume: **${VOLUME}**`);
 
     } else if (command == 'tocando') {
         if (!serverQueue) return message.channel.send('Como vai mostrar, se não tem nada pra tocar em???.');
-
-        saveCommand(command, message);
+	
+	saveCommand(command, message);
 
         return message.channel.send(`🎶 Tocando agora: **${serverQueue.songs[0].title}**`);
     } else if (command == 'fila') {
         if (!serverQueue) return message.channel.send('TEM PORRA NENHUMA AQUI NÃO!');
 
-        saveCommand(command, message);
+	saveCommand(command, message);
         return message.channel.send(`__**Músicas da fila:**__ \n\n${serverQueue.songs.map(song => `**-** ${song.title}`).join('\n')} \n\n **Tocando agora: ** ${serverQueue.songs[0].title}`);
-
+	
         // ${serverQueue.songs[0].title} tocando agora
 
     } else if (command == 'pausar') {
-        // if (serverQueue && serverQueue.playing) {
-        //     serverQueue.playing = false;
-        //     serverQueue.connection.dispatcher.pause();
-        //     return message.channel.send('⏸ TA PAUSADO!');
-        // }
-
-        // return message.channel.send('NÃO TEM NADA TOCANDO BB.');
-
         saveCommand(command, message);
         serverQueue.connection.dispatcher.pause();
         return message.channel.send('⏸ TA PAUSADO!');
 
     } else if (command == 'voltar') {
-        // if (serverQueue && !serverQueue.playing) {
-        //     serverQueue.playing = true;
-        //     serverQueue.connection.dispatcher.resume();
-        //     return message.channel.send('▶ AE PORRA, VOLTOU A FESTA!');
-        // }
-        // return message.channel.send('NÃO TEM NADA TOCANDO BB.');
         saveCommand(command, message);
         serverQueue.connection.dispatcher.resume();
         return message.channel.send('▶ AE PORRA, VOLTOU A FESTA!');
@@ -222,7 +196,8 @@ client.on('message', async message => {
 
         if (isLink) {
             if (await newsong(url) == true) {
-                saveCommand(command + ' ' + url, message);
+				saveCommand(command + ' ' + url, message);
+				TOTAL = await db.Playlist.count();
                 return message.channel.send(`✅ Música adicionada a sua playlist`);
             } else {
                 return message.channel.send(`Esta url já foi adicionada`)
@@ -230,39 +205,41 @@ client.on('message', async message => {
         } else {
             return message.channel.send('🆘 Ih rapaz... LINK INVALIDO! 🆘🆘🆘🆘🆘');
         }
-    } else if (command == 'summon') {
+    } else if (command == 'summon') {  
         if (!message.member.voiceChannel) return message.channel.send('Voce não está no canal!');
-
-        saveCommand(command, message);
-        if (!serverQueue) {
+        
+	saveCommand(command, message);
+        if (!serverQueue) 
+        {
             try {
                 var video = await youtube.getVideo(await songlist());
                 handleVideo(video, message, voiceChannel);
             } catch (error) {
                 console.log(error);
             }
-
+            
         }
 
-        return undefined;
+		return undefined;
     } else if (command == 'ajuda' || command == 'ajudar') {
-        saveCommand(command, message);
-        return message.channel.send("``` Temos os seguintes comandos \n\n" +
-            "!!entrar - Use este comando para ter acesso a nossos canais\n" +
-            "!!sair\n" +
-            "!tocar + nome da música ou link do youtube\n" +
-            "!pular - Use este comando para pular a música\n" +
-            "!volume - Use este comando para ver com o volume atual da música, que vai de 1 a 100\n" +
-            "!volume (valor do volume) - Exemplo: !volume 30\n" +
-            "!tocando - Use este comando para qual é música que está tocando\n" +
-            "!fila - Use este comando para ver as músicas que estão na fila\n" +
-            "!pausar - Use este comando para pausar uma música\n" +
-            "!voltar - Use este comando para retomar a música pausada\n" +
-            "!nova + link youtbe - Use este comando para cadastrar um nova música nova em nossa playlist. Ex: !nova https://www.youtube.com/watch?v=MVN-0xlzXro&t=124s\n" +
-            "!summon - Use este comando para o bot começar a tocar no canal. ```");
+	saveCommand(command, message);
+        return message.channel.send("``` Temos os seguintes comandos \n\n" + 
+                                    "!!entrar - Use este comando para ter acesso a nossos canais\n" +
+                                    "!!sair\n" +
+				    "!ping - Use para ver o ping\n" +
+                                    "!tocar + nome da música ou link do youtube\n" +
+                                    "!pular - Use este comando para pular a música\n" + 
+                                    "!volume - Use este comando para ver com o volume atual da música, que vai de 1 a 100\n"
+                                    + "!volume (valor do volume) - Exemplo: !volume 30\n"+
+                                    "!tocando - Use este comando para qual é música que está tocando\n" +
+                                    "!fila - Use este comando para ver as músicas que estão na fila\n" +
+                                    "!pausar - Use este comando para pausar uma música\n" +
+                                    "!voltar - Use este comando para retomar a música pausada\n" +
+                                    "!nova + link youtbe - Use este comando para cadastrar um nova música nova em nossa playlist. Ex: !nova https://www.youtube.com/watch?v=MVN-0xlzXro&t=124s\n"+
+                                    "!summon - Use este comando para o bot começar a tocar no canal. ```");
     } else if (command == 'ping') {
-        saveCommand(command, message);
-        return message.channel.send(`Pong! \`${client.pings[0]}ms\``);
+        await saveCommand(command, message);
+        return message.channel.send(`:ping_pong: Pong! ${client.pings[0]}ms`);
     }
 
     return undefined;
@@ -302,8 +279,8 @@ async function handleVideo(video, message, voiceChannel, playlist = false) {
         }
     } else {
         serverQueue.songs.push(song);
-
-        if (playlist) return serverQueue.connection.dispatcher.end('Skip command has been used!');
+        
+        if (playlist) return  serverQueue.connection.dispatcher.end('Skip command has been used!');
         else return message.channel.send(`✅ **${song.title}** \n\nESSE MUSICÃO DA PREULA FOI ADICIONADO NA FILA!`);
     }
     return undefined;
@@ -316,21 +293,21 @@ async function getVideo() {
 
     while (condition) {
         var url = await songlist();
-        video = await youtube.getVideo(url);
-
-        if (video) condition = false;
+        video = await youtube.getVideo(url);  
+        
+        if(video) condition = false;
     }
 
     return video;
 }
 
 async function naqueue(song, message, voiceChannel) {
-
+    
     // console.log(song);
     var video;
     var condition = true;
 
-    if (!song) {
+    if(!song) {
         while (condition) {
             var url = await songlist();
             try {
@@ -341,11 +318,7 @@ async function naqueue(song, message, voiceChannel) {
             }
         }
 
-        const song = {
-            id: video.id,
-            title: Util.escapeMarkdown(video.title),
-            url: `https://www.youtube.com/watch?v=${video.id}`
-        }
+        const song = {id: video.id,title: Util.escapeMarkdown(video.title), url: `https://www.youtube.com/watch?v=${video.id}`}
         handleVideo(video, message, voiceChannel, true);
 
     }
@@ -353,8 +326,7 @@ async function naqueue(song, message, voiceChannel) {
 
 async function play(guild, song, message = null, voiceChannel = null) {
     const serverQueue = queue.get(guild.id);
-    var url = '',
-        newurl = '';
+    var url = '', newurl = '';
 
     // if (!song) {
     //     serverQueue.voiceChannel.leave(); //deixar canal
@@ -365,10 +337,7 @@ async function play(guild, song, message = null, voiceChannel = null) {
 
 
     // var streamoptions = {quality: 'lowest', filter: 'audio'};
-    const stream = await ytdl(song.url, {
-        quality: 'lowest',
-        filter: 'audioonly'
-    });
+    const stream = ytdl(song.url, { quality: 'lowest', filter: 'audioonly' });
 
     const dispatcher = serverQueue.connection.playStream(stream) //first is prefix -< args[0]
         .on('end', reason => {
@@ -376,27 +345,25 @@ async function play(guild, song, message = null, voiceChannel = null) {
             else console.log(reason, ' reason');
             serverQueue.songs.shift();
 
-            if (!serverQueue.songs[0]) {
+            if(!serverQueue.songs[0]){
                 queue.delete(guild.id);
                 naqueue(serverQueue.songs[0], message, voiceChannel);
-            } else
+            }
+            else
                 play(guild, serverQueue.songs[0], message, voiceChannel);
         })
         .on('error', error => console.error(error));
 
     dispatcher.setVolumeLogarithmic((serverQueue.volume / 10) / 5);
 
-    var options = {
-        url: song.url,
-        type: 2
-    };
-    client.user.setActivity(`${song.title}`, options);
+    var options = {url: song.url, type: 2};
+    client.user.setActivity(`${song.title}`, options);    
     // serverQueue.textChannel.send(`🎶 Começando a tocar: **${song.title}**`);
 }
 
 async function songlist() {
 
-    var max = await db.Playlist.count();
+    var max = TOTAL;
     var line = Math.random() * (max - 1) + 1;
     line = Math.round(line);
     var song = await db.Playlist.findById(line);
@@ -407,18 +374,12 @@ async function songlist() {
 async function newsong(link) {
     var retorno = false;
 
-    var song = await db.Playlist.findOne({
-        where: {
-            url: link
-        }
-    });
+    var song = await db.Playlist.findOne({ where: {url: link}});
 
-    if (song)
+    if (song) 
         retorno = false;
     else {
-        await db.Playlist.create({
-            url: link
-        });
+        await db.Playlist.create({ url: link});
         retorno = true;
     }
     return retorno;
@@ -435,11 +396,7 @@ function setActivity(activity) {
 }
 
 function saveCommand(command, message) {
-    db.Command.create({
-        name: command,
-        userid: message.member.user.id,
-        username: message.member.user.username
-    });
+    db.Command.create({name: command,userid:message.member.user.id,username:message.member.user.username});
 }
 
-client.login(TOKEN_HOMO);
+client.login(IGOR);
