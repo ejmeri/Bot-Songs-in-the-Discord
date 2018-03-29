@@ -1,7 +1,7 @@
 require('dotenv').load();
 
 const mysql = require('../database/mysql');
-const option = require('../database/option').mysql; // NUNCA ESQUECER DE TROCAR
+const option = require('../database/option').heroku; // NUNCA ESQUECER DE TROCAR
 
 if (!global.hasOwnProperty('db')) {
 	var Sequelize = require('sequelize'),

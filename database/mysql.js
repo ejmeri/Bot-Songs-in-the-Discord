@@ -1,7 +1,7 @@
 module.exports = {
-    database: "bot",
+    database: "botigorhomologacao",
     username: "root",
-    password: "Google@amazon!bot123",
+    password: "",  //Google@amazon!bot123
     params: {
         dialect: "mysql",
         define: {
