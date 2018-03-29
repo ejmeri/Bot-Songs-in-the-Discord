@@ -446,4 +446,4 @@ function saveCommand(command, message) {
     });
 }
 
-client.login(TOKEN_HOMO);
+client.login(TOKEN);
